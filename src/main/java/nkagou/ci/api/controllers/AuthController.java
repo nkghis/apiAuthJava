@@ -3,8 +3,10 @@ package nkagou.ci.api.controllers;
 import nkagou.ci.api.models.ERole;
 import nkagou.ci.api.models.Role;
 import nkagou.ci.api.models.User;
+import nkagou.ci.api.payload.request.ChangePasswordRequest;
 import nkagou.ci.api.payload.request.LoginRequest;
 import nkagou.ci.api.payload.request.SignupRequest;
+import nkagou.ci.api.payload.request.UpdateUserRequest;
 import nkagou.ci.api.payload.response.JwtResponse;
 import nkagou.ci.api.payload.response.MessageResponse;
 import nkagou.ci.api.repository.RoleRepository;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -78,7 +81,7 @@ public class AuthController {
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()),
-                signUpRequest.getFullname());
+                signUpRequest.getFullname().toUpperCase());
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
         if (strRoles == null) {
@@ -108,5 +111,73 @@ public class AuthController {
         user.setRoles(roles);
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("Utilisateur enregistré avec succès"));
+    }
+
+    @PostMapping("/changepassword")
+    public ResponseEntity<?> changeUserPassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest ){
+
+        if (!userRepository.existsByUsername(changePasswordRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Erreur: Nom d'utilisateur introuvable!"));
+        }
+        Optional<User> u = userRepository.findByUsername(changePasswordRequest.getUsername());
+        //User user = userRepository.findByUsername(changePasswordRequest.getUsername());
+
+        User user = userRepository.getById(u.get().getId());
+        //User user = userRepository.getById(u.get().getId());
+        String password = encoder.encode(changePasswordRequest.getPassword());
+        user.setPassword(password);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("Mot de passe modifié avec succès"));
+    }
+
+    /*
+    * Update user information
+    * email
+    * fullname
+    * */
+    @PostMapping("/updateuser")
+    public ResponseEntity<?>  updateUser(@Valid @RequestBody UpdateUserRequest updateUserRequest ){
+
+        if (!userRepository.existsByUsername(updateUserRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Erreur: Nom d'utilisateur introuvable!"));
+        }
+        if (userRepository.existsByEmail(updateUserRequest.getEmail())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Erreur: cet email est déjà utilisé!"));
+        }
+        if (updateUserRequest.getFullname() == null && updateUserRequest.getEmail() == null ){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Erreur: le champ 'fullname' ou 'email' est requis"));
+        }
+
+        Optional<User> u = userRepository.findByUsername(updateUserRequest.getUsername());
+
+        User user = userRepository.getById(u.get().getId());
+        //User user = userRepository.findByUsername(UpdateUserRequest.getUsername());
+
+        if (updateUserRequest.getEmail() == null)
+        {
+            user.setFullname(updateUserRequest.getFullname().toUpperCase());
+            userRepository.save(user);
+        }
+
+        if (updateUserRequest.getFullname() == null){
+            user.setEmail(updateUserRequest.getEmail());
+            userRepository.save(user);
+        }
+        if (updateUserRequest.getFullname() != null && updateUserRequest.getEmail() != null ){
+            user.setEmail(updateUserRequest.getEmail());
+            user.setFullname(updateUserRequest.getFullname().toUpperCase());
+            userRepository.save(user);
+        }
+
+
+        return ResponseEntity.ok(new MessageResponse("Utilisateur modifié avec succès"));
     }
 }

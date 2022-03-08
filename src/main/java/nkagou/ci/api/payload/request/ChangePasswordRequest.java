@@ -2,7 +2,7 @@ package nkagou.ci.api.payload.request;
 
 import javax.validation.constraints.NotBlank;
 
-public class LoginRequest {
+public class ChangePasswordRequest {
 
     @NotBlank(message = "username, ne peut pas être vide")
     private String username;

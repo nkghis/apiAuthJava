@@ -6,23 +6,25 @@ import javax.validation.constraints.*;
 
 public class SignupRequest {
 
-    @NotBlank
-    @Size(min = 3, max = 20)
+    /*@NotNull(message = "le username ne peut pas être null ")*/
+    /*@NotEmpty(message = "le username ne peut pas être vide")*/
+    @NotBlank(message = "username, ne peut pas être vide")
+    @Size(min = 3, max = 20, message = "username, la taille doit être comprise entre 3 et 20")
     private String username;
 
-    @NotBlank
+    @NotBlank(message = "email, ne peut pas être vide")
     @Size(max = 50)
-    @Email
+    @Email(message = "email, non syntaxiquement non correct")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "fullname, ne peut pas être vide")
     @Size(max = 120)
     private String fullname;
 
     private Set<String> role;
 
-    @NotBlank
-    @Size(min = 6, max = 40)
+    @NotBlank(message = "password, ne peut pas être vide")
+    @Size(min = 6, max = 40, message = "password, la taille doit être comprise entre 6 et 40")
     private String password;
 
     public String getUsername() {
